@@ -4,7 +4,8 @@ const SCRIPT_URL =
 const state = {
   eintraege: [],
   taetigkeiten: [],
-  kalenderDatum: new Date()
+  kalenderDatum: new Date(),
+  originalDatum: null
 };
 
 const form = document.getElementById("entryForm");
@@ -15,6 +16,10 @@ const stunden = document.getElementById("stunden");
 const urlaub = document.getElementById("urlaub");
 const krank = document.getElementById("krank");
 const saveButton = document.getElementById("saveButton");
+const updateButton = document.getElementById("updateButton");
+const deleteButton = document.getElementById("deleteButton");
+const cancelButton = document.getElementById("cancelButton");
+const buttonRow = document.getElementById("buttonRow");
 const meldung = document.getElementById("meldung");
 const monthLabel = document.getElementById("monthLabel");
 const calendarGrid = document.getElementById("calendarGrid");
@@ -23,6 +28,9 @@ const nextMonth = document.getElementById("nextMonth");
 
 window.addEventListener("load", init);
 form.addEventListener("submit", speichern);
+updateButton.addEventListener("click", aktualisieren);
+deleteButton.addEventListener("click", loeschen);
+cancelButton.addEventListener("click", bearbeitungBeenden);
 datum.addEventListener("change", datumGeaendert);
 prevMonth.addEventListener("click", () => monatWechseln(-1));
 nextMonth.addEventListener("click", () => monatWechseln(1));
@@ -75,13 +83,28 @@ async function ladeMonat() {
 async function speichern(event) {
   event.preventDefault();
 
+  const daten = formularDaten();
+  const fehler = validiere(daten);
+
+  if (fehler) {
+    zeigeMeldung(fehler, "error");
+    return;
+  }
+
+  if (state.eintraege.some(e => e.datum === daten.datum)) {
+    zeigeMeldung("Für dieses Datum wurde bereits ein Eintrag erfasst.", "error");
+    return;
+  }
+
+  await aktionAusfuehren("save", daten);
+}
+
+async function aktualisieren() {
+  if (!state.originalDatum) return;
+
   const daten = {
-    datum: datum.value,
-    arbeitsort: arbeitsort.value,
-    taetigkeit: taetigkeit.value,
-    stunden: stunden.value,
-    urlaub: urlaub.value,
-    krank: krank.value
+    ...formularDaten(),
+    originalDatum: state.originalDatum
   };
 
   const fehler = validiere(daten);
@@ -91,44 +114,118 @@ async function speichern(event) {
     return;
   }
 
-  const bereitsVorhanden = state.eintraege.some(
-    (eintrag) => eintrag.datum === daten.datum
+  await aktionAusfuehren("update", daten);
+}
+
+async function loeschen() {
+  if (!state.originalDatum) return;
+
+  const wirklich = window.confirm(
+    "Soll der Eintrag vom " + datum.value + " wirklich gelöscht werden?"
   );
 
-  if (bereitsVorhanden) {
-    zeigeMeldung("Für dieses Datum wurde bereits ein Eintrag erfasst.", "error");
-    return;
-  }
+  if (!wirklich) return;
 
-  saveButton.disabled = true;
-  zeigeMeldung("Speichere ...", "");
+  await aktionAusfuehren("delete", {
+    datum: state.originalDatum
+  });
+}
+
+async function aktionAusfuehren(action, daten) {
+  alleButtonsDeaktivieren(true);
+  zeigeMeldung("Bitte warten ...", "");
 
   try {
     const data = await jsonpRequest({
-      action: "save",
+      action,
       payload: JSON.stringify(daten)
     });
 
     if (!data.ok) {
-      throw new Error(data.message || "Speichern fehlgeschlagen.");
+      throw new Error(data.message || "Aktion fehlgeschlagen.");
     }
 
-    zeigeMeldung(data.message || "Gespeichert ✅", "success");
+    zeigeMeldung(data.message || "Erledigt ✅", "success");
 
-    const gespeichertesDatum = datumAusIso(daten.datum);
+    const zielDatum = datumAusIso(
+      action === "delete"
+        ? state.originalDatum
+        : daten.datum
+    );
+
     state.kalenderDatum = new Date(
-      gespeichertesDatum.getFullYear(),
-      gespeichertesDatum.getMonth(),
+      zielDatum.getFullYear(),
+      zielDatum.getMonth(),
       1
     );
 
-    formularZuruecksetzen();
+    bearbeitungBeenden(false);
     await ladeMonat();
   } catch (err) {
     zeigeMeldung("Fehler: " + err.message, "error");
   } finally {
-    saveButton.disabled = false;
+    alleButtonsDeaktivieren(false);
   }
+}
+
+function formularDaten() {
+  return {
+    datum: datum.value,
+    arbeitsort: arbeitsort.value,
+    taetigkeit: taetigkeit.value,
+    stunden: stunden.value,
+    urlaub: urlaub.value,
+    krank: krank.value
+  };
+}
+
+function eintragLaden(eintrag) {
+  state.originalDatum = eintrag.datum;
+
+  datum.value = eintrag.datum;
+  arbeitsort.value = eintrag.arbeitsort || "";
+  taetigkeit.value = eintrag.taetigkeit || "";
+  stunden.value = eintrag.stunden || "";
+
+  urlaub.value = Number(eintrag.urlaub) > 0 ? "Ja" : "Nein";
+  krank.value = Number(eintrag.krank) > 0 ? "Ja" : "Nein";
+
+  handleAbwesenheit();
+  bearbeitungsmodusSetzen(true);
+  zeigeMeldung("Eintrag geladen – ändern oder löschen.", "");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function bearbeitungsmodusSetzen(aktiv) {
+  saveButton.hidden = aktiv;
+  updateButton.hidden = !aktiv;
+  deleteButton.hidden = !aktiv;
+  buttonRow.classList.toggle("edit-mode", aktiv);
+}
+
+function bearbeitungBeenden(setzeAufHeute = true) {
+  state.originalDatum = null;
+  bearbeitungsmodusSetzen(false);
+
+  arbeitsort.value = "";
+  taetigkeit.value = "";
+  stunden.value = "";
+  urlaub.value = "Nein";
+  krank.value = "Nein";
+
+  if (setzeAufHeute) {
+    setzeHeute();
+  }
+
+  handleAbwesenheit();
+  zeigeMeldung("", "");
+}
+
+function alleButtonsDeaktivieren(deaktiviert) {
+  saveButton.disabled = deaktiviert;
+  updateButton.disabled = deaktiviert;
+  deleteButton.disabled = deaktiviert;
+  cancelButton.disabled = deaktiviert;
 }
 
 function renderKalender() {
@@ -145,7 +242,7 @@ function renderKalender() {
   });
 
   const eintragsMap = new Map(
-    state.eintraege.map((eintrag) => [eintrag.datum, eintrag])
+    state.eintraege.map(e => [e.datum, e])
   );
 
   calendarGrid.innerHTML = "";
@@ -180,13 +277,13 @@ function renderKalender() {
       `<span class="status-label">${statusText(eintrag)}</span>`;
 
     button.addEventListener("click", () => {
-      datum.value = iso;
-      window.scrollTo({ top: 0, behavior: "smooth" });
-
       if (eintrag) {
-        zeigeMeldung("Für dieses Datum besteht bereits ein Eintrag.", "error");
+        eintragLaden(eintrag);
       } else {
+        bearbeitungBeenden(false);
+        datum.value = iso;
         zeigeMeldung("", "");
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     });
 
@@ -241,15 +338,6 @@ async function datumGeaendert() {
   } else {
     renderKalender();
   }
-
-  const vorhanden = state.eintraege.some(
-    (eintrag) => eintrag.datum === datum.value
-  );
-
-  zeigeMeldung(
-    vorhanden ? "Für dieses Datum besteht bereits ein Eintrag." : "",
-    vorhanden ? "error" : ""
-  );
 }
 
 async function monatWechseln(richtung) {
@@ -259,7 +347,6 @@ async function monatWechseln(richtung) {
     1
   );
 
-  datum.value = toIsoDate(state.kalenderDatum);
   await ladeMonat();
 }
 
@@ -359,9 +446,7 @@ function handleAbwesenheit() {
 }
 
 function validiere(daten) {
-  if (!daten.datum) {
-    return "Bitte Datum auswählen.";
-  }
+  if (!daten.datum) return "Bitte Datum auswählen.";
 
   if (
     daten.urlaub === "Ja" &&
@@ -374,13 +459,8 @@ function validiere(daten) {
     daten.urlaub !== "Ja" &&
     daten.krank !== "Ja"
   ) {
-    if (!daten.arbeitsort) {
-      return "Bitte Arbeitsort auswählen.";
-    }
-
-    if (!daten.taetigkeit) {
-      return "Bitte Tätigkeit auswählen.";
-    }
+    if (!daten.arbeitsort) return "Bitte Arbeitsort auswählen.";
+    if (!daten.taetigkeit) return "Bitte Tätigkeit auswählen.";
 
     const wert = Number(daten.stunden);
 
@@ -394,15 +474,6 @@ function validiere(daten) {
   }
 
   return "";
-}
-
-function formularZuruecksetzen() {
-  arbeitsort.value = "";
-  taetigkeit.value = "";
-  stunden.value = "";
-  urlaub.value = "Nein";
-  krank.value = "Nein";
-  handleAbwesenheit();
 }
 
 function zeigeMeldung(text, klasse) {
