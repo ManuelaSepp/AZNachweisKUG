@@ -336,6 +336,27 @@
       background: #eef3f7;
       border: 1px solid #dce2e7;
       text-align: center;
+      transition: background 0.18s ease, border-color 0.18s ease;
+    }
+
+    .selected-day-status.status-neutral {
+      background: #eef3f7;
+      border-color: #dce2e7;
+    }
+
+    .selected-day-status.status-done {
+      background: #e7f5df;
+      border-color: #b8dca6;
+    }
+
+    .selected-day-status.status-urlaub {
+      background: #dff3d2;
+      border-color: #a9d28f;
+    }
+
+    .selected-day-status.status-krank {
+      background: #fde3e3;
+      border-color: #e7b4b4;
     }
 
     .selected-day-date {
@@ -646,6 +667,6 @@
 
   <div id="dayTooltip" class="day-tooltip" role="tooltip"></div>
 
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

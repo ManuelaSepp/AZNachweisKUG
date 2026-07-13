@@ -40,6 +40,7 @@ const yearLabel = document.getElementById("yearLabel");
 const yearGrid = document.getElementById("yearGrid");
 const prevYear = document.getElementById("prevYear");
 const nextYear = document.getElementById("nextYear");
+const selectedDayStatus = document.getElementById("selectedDayStatus");
 const selectedDayDate = document.getElementById("selectedDayDate");
 const selectedDayMessage = document.getElementById("selectedDayMessage");
 
@@ -347,10 +348,12 @@ function renderKalender() {
 function renderSelectedDayStatus() {
   const iso = state.ausgewaehltesDatum || datum.value;
 
+  selectedDayStatus.className = "selected-day-status status-neutral";
+  selectedDayMessage.className = "selected-day-message";
+
   if (!iso) {
     selectedDayDate.textContent = "";
     selectedDayMessage.textContent = "";
-    selectedDayMessage.className = "selected-day-message";
     return;
   }
 
@@ -363,28 +366,35 @@ function renderSelectedDayStatus() {
   });
 
   const eintrag = state.eintraege.find((e) => e.datum === iso);
-  selectedDayMessage.className = "selected-day-message";
 
   if (!eintrag) {
-    selectedDayMessage.textContent = "Noch kein Eintrag vorhanden";
-    selectedDayMessage.classList.add("open");
+    selectedDayMessage.textContent =
+      "ℹ️ Für diesen Tag ist aktuell kein Eintrag vorhanden.";
+    selectedDayStatus.className =
+      "selected-day-status status-neutral";
     return;
   }
 
   if (Number(eintrag.urlaub) > 0) {
-    selectedDayMessage.textContent = "Urlaub eingetragen";
+    selectedDayMessage.textContent = "🌴 Urlaub eingetragen.";
     selectedDayMessage.classList.add("urlaub");
+    selectedDayStatus.className =
+      "selected-day-status status-urlaub";
     return;
   }
 
   if (Number(eintrag.krank) > 0) {
-    selectedDayMessage.textContent = "Krank eingetragen";
+    selectedDayMessage.textContent = "🤒 Krank eingetragen.";
     selectedDayMessage.classList.add("krank");
+    selectedDayStatus.className =
+      "selected-day-status status-krank";
     return;
   }
 
-  selectedDayMessage.textContent = "Arbeitszeit bereits erfasst";
+  selectedDayMessage.textContent = "✅ Eintrag vorhanden.";
   selectedDayMessage.classList.add("done");
+  selectedDayStatus.className =
+    "selected-day-status status-done";
 }
 
 async function ladeJahresuebersicht() {
