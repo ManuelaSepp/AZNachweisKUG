@@ -275,6 +275,53 @@
       display: block;
     }
 
+
+    .stats-title {
+      margin: 0 0 14px;
+      font-size: 19px;
+      text-align: center;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .stat-card {
+      padding: 12px;
+      border-radius: 12px;
+      background: #f7f8fa;
+      text-align: center;
+      border: 1px solid #e3e7eb;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: #667085;
+      font-weight: 700;
+    }
+
+    .stats-sums {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .stats-sums .stat-card {
+      background: #eef3f7;
+    }
+
     @media (max-width: 420px) {
       .app { padding: 8px; }
       .card { padding: 18px 14px; }
@@ -355,10 +402,48 @@
         <span class="status-krank">Krank</span>
       </div>
     </section>
+
+    <section class="card">
+      <h2 class="stats-title">Monatsübersicht</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span id="statBuero" class="stat-value">0</span>
+          <span class="stat-label">Bürotage</span>
+        </div>
+
+        <div class="stat-card">
+          <span id="statHomeoffice" class="stat-value">0</span>
+          <span class="stat-label">Homeoffice</span>
+        </div>
+
+        <div class="stat-card">
+          <span id="statUrlaub" class="stat-value">0</span>
+          <span class="stat-label">Urlaubstage</span>
+        </div>
+
+        <div class="stat-card">
+          <span id="statKrank" class="stat-value">0</span>
+          <span class="stat-label">Kranktage</span>
+        </div>
+      </div>
+
+      <div class="stats-sums">
+        <div class="stat-card">
+          <span id="statArbeitsstunden" class="stat-value">0</span>
+          <span class="stat-label">Arbeitsstunden</span>
+        </div>
+
+        <div class="stat-card">
+          <span id="statKug" class="stat-value">0</span>
+          <span class="stat-label">KUG-Stunden</span>
+        </div>
+      </div>
+    </section>
   </main>
 
   <div id="dayTooltip" class="day-tooltip" role="tooltip"></div>
 
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

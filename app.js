@@ -27,6 +27,12 @@ const calendarGrid = document.getElementById("calendarGrid");
 const prevMonth = document.getElementById("prevMonth");
 const nextMonth = document.getElementById("nextMonth");
 const dayTooltip = document.getElementById("dayTooltip");
+const statBuero = document.getElementById("statBuero");
+const statHomeoffice = document.getElementById("statHomeoffice");
+const statUrlaub = document.getElementById("statUrlaub");
+const statKrank = document.getElementById("statKrank");
+const statArbeitsstunden = document.getElementById("statArbeitsstunden");
+const statKug = document.getElementById("statKug");
 
 window.addEventListener("load", init);
 form.addEventListener("submit", speichern);
@@ -77,6 +83,7 @@ async function ladeMonat() {
 
     renderTaetigkeiten(state.taetigkeiten);
     renderKalender();
+    renderStatistik();
     zeigeMeldung("", "");
   } catch (err) {
     zeigeMeldung("Fehler: " + err.message, "error");
@@ -313,6 +320,50 @@ function renderKalender() {
   }
 }
 
+
+
+function renderStatistik() {
+  let buero = 0;
+  let homeoffice = 0;
+  let urlaubstage = 0;
+  let kranktage = 0;
+  let arbeitsstunden = 0;
+
+  state.eintraege.forEach((eintrag) => {
+    const ort = String(eintrag.arbeitsort || "").toLowerCase();
+    const stundenWert = Number(eintrag.stunden) || 0;
+    const urlaubWert = Number(eintrag.urlaub) || 0;
+    const krankWert = Number(eintrag.krank) || 0;
+
+    if (urlaubWert > 0) {
+      urlaubstage += 1;
+      return;
+    }
+
+    if (krankWert > 0) {
+      kranktage += 1;
+      return;
+    }
+
+    if (ort.includes("home")) {
+      homeoffice += 1;
+    } else if (ort.includes("büro") || stundenWert > 0) {
+      buero += 1;
+    }
+
+    arbeitsstunden += stundenWert;
+  });
+
+  const arbeitstage = buero + homeoffice;
+  const kugStunden = Math.max((arbeitstage * 6) - arbeitsstunden, 0);
+
+  statBuero.textContent = buero;
+  statHomeoffice.textContent = homeoffice;
+  statUrlaub.textContent = urlaubstage;
+  statKrank.textContent = kranktage;
+  statArbeitsstunden.textContent = stundenFormatieren(arbeitsstunden);
+  statKug.textContent = stundenFormatieren(kugStunden);
+}
 
 function tooltipAnzeigen(button, eintrag) {
   const rect = button.getBoundingClientRect();
