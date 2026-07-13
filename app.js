@@ -40,6 +40,8 @@ const yearLabel = document.getElementById("yearLabel");
 const yearGrid = document.getElementById("yearGrid");
 const prevYear = document.getElementById("prevYear");
 const nextYear = document.getElementById("nextYear");
+const selectedDayDate = document.getElementById("selectedDayDate");
+const selectedDayMessage = document.getElementById("selectedDayMessage");
 
 window.addEventListener("load", init);
 form.addEventListener("submit", speichern);
@@ -98,6 +100,7 @@ async function ladeMonat() {
     renderTaetigkeiten(state.taetigkeiten);
     renderKalender();
     renderStatistik();
+    renderSelectedDayStatus();
     zeigeMeldung("", "");
   } catch (err) {
     zeigeMeldung("Fehler: " + err.message, "error");
@@ -218,6 +221,7 @@ function eintragLaden(eintrag) {
   krank.value = Number(eintrag.krank) > 0 ? "Ja" : "Nein";
 
   handleAbwesenheit();
+  renderSelectedDayStatus();
   bearbeitungsmodusSetzen(true);
   zeigeMeldung("Eintrag geladen – ändern oder löschen.", "");
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -310,6 +314,7 @@ function renderKalender() {
       state.ausgewaehltesDatum = iso;
       datum.value = iso;
       renderKalender();
+      renderSelectedDayStatus();
 
       if (eintrag) {
         eintragLaden(eintrag);
@@ -318,6 +323,7 @@ function renderKalender() {
         datum.value = iso;
         state.ausgewaehltesDatum = iso;
         renderKalender();
+        renderSelectedDayStatus();
         zeigeMeldung("", "");
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -336,6 +342,50 @@ function renderKalender() {
 
 
 
+
+
+function renderSelectedDayStatus() {
+  const iso = state.ausgewaehltesDatum || datum.value;
+
+  if (!iso) {
+    selectedDayDate.textContent = "";
+    selectedDayMessage.textContent = "";
+    selectedDayMessage.className = "selected-day-message";
+    return;
+  }
+
+  const dateObj = datumAusIso(iso);
+  selectedDayDate.textContent = dateObj.toLocaleDateString("de-DE", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
+
+  const eintrag = state.eintraege.find((e) => e.datum === iso);
+  selectedDayMessage.className = "selected-day-message";
+
+  if (!eintrag) {
+    selectedDayMessage.textContent = "Noch kein Eintrag vorhanden";
+    selectedDayMessage.classList.add("open");
+    return;
+  }
+
+  if (Number(eintrag.urlaub) > 0) {
+    selectedDayMessage.textContent = "Urlaub eingetragen";
+    selectedDayMessage.classList.add("urlaub");
+    return;
+  }
+
+  if (Number(eintrag.krank) > 0) {
+    selectedDayMessage.textContent = "Krank eingetragen";
+    selectedDayMessage.classList.add("krank");
+    return;
+  }
+
+  selectedDayMessage.textContent = "Arbeitszeit bereits erfasst";
+  selectedDayMessage.classList.add("done");
+}
 
 async function ladeJahresuebersicht() {
   const jahr = state.jahresDatum.getFullYear();
@@ -592,6 +642,7 @@ async function datumGeaendert() {
   if (!datum.value) return;
 
   state.ausgewaehltesDatum = datum.value;
+  renderSelectedDayStatus();
   const neuesDatum = datumAusIso(datum.value);
   const monatGeaendert =
     neuesDatum.getFullYear() !== state.kalenderDatum.getFullYear() ||

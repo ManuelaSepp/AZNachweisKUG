@@ -328,6 +328,35 @@
     }
 
 
+
+    .selected-day-status {
+      margin: 0 0 14px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: #eef3f7;
+      border: 1px solid #dce2e7;
+      text-align: center;
+    }
+
+    .selected-day-date {
+      display: block;
+      font-size: 16px;
+      font-weight: 700;
+      color: #25303b;
+    }
+
+    .selected-day-message {
+      display: block;
+      margin-top: 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .selected-day-message.open { color: #8a5a00; }
+    .selected-day-message.done { color: #337a19; }
+    .selected-day-message.urlaub { color: #35651c; }
+    .selected-day-message.krank { color: #8a2020; }
+
     .year-head {
       display: flex;
       align-items: center;
@@ -480,6 +509,32 @@
 
 <body>
   <main class="app">
+<details class="card" open>
+      <summary>Kalender</summary>
+
+      <div class="collapsible-content">
+        <div id="selectedDayStatus" class="selected-day-status">
+          <span id="selectedDayDate" class="selected-day-date"></span>
+          <span id="selectedDayMessage" class="selected-day-message"></span>
+        </div>
+
+        <div class="calendar-head">
+          <button type="button" id="prevMonth" aria-label="Vorheriger Monat">‹</button>
+          <div id="monthLabel"></div>
+          <button type="button" id="nextMonth" aria-label="Nächster Monat">›</button>
+        </div>
+
+        <div id="calendarGrid" class="calendar-grid"></div>
+
+        <div class="legend">
+          <span class="status-buero">Büro</span>
+          <span class="status-homeoffice">HO</span>
+          <span class="status-urlaub">Urlaub</span>
+          <span class="status-krank">Krank</span>
+        </div>
+      </div>
+    </details>
+
     <section class="card">
       <h1>Arbeitszeit erfassen</h1>
 
@@ -533,7 +588,6 @@
       </form>
     </section>
 
-    
     <details class="card" id="yearOverview">
       <summary id="yearSummary">Jahresübersicht 2026</summary>
 
@@ -545,27 +599,6 @@
         </div>
 
         <div id="yearGrid" class="year-grid"></div>
-      </div>
-    </details>
-
-<details class="card" open>
-      <summary>Kalender</summary>
-
-      <div class="collapsible-content">
-        <div class="calendar-head">
-          <button type="button" id="prevMonth" aria-label="Vorheriger Monat">‹</button>
-          <div id="monthLabel"></div>
-          <button type="button" id="nextMonth" aria-label="Nächster Monat">›</button>
-        </div>
-
-        <div id="calendarGrid" class="calendar-grid"></div>
-
-        <div class="legend">
-          <span class="status-buero">Büro</span>
-          <span class="status-homeoffice">HO</span>
-          <span class="status-urlaub">Urlaub</span>
-          <span class="status-krank">Krank</span>
-        </div>
       </div>
     </details>
 
@@ -609,9 +642,10 @@
       </div>
     </details>
   </main>
+  </main>
 
   <div id="dayTooltip" class="day-tooltip" role="tooltip"></div>
 
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
