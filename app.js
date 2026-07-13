@@ -6,6 +6,7 @@ const state = {
   taetigkeiten: [],
   kalenderDatum: new Date(),
   originalDatum: null,
+  jahresDatum: new Date(),
   ausgewaehltesDatum: null
 };
 
@@ -33,6 +34,12 @@ const statUrlaub = document.getElementById("statUrlaub");
 const statKrank = document.getElementById("statKrank");
 const statArbeitsstunden = document.getElementById("statArbeitsstunden");
 const statKug = document.getElementById("statKug");
+const yearOverview = document.getElementById("yearOverview");
+const yearSummary = document.getElementById("yearSummary");
+const yearLabel = document.getElementById("yearLabel");
+const yearGrid = document.getElementById("yearGrid");
+const prevYear = document.getElementById("prevYear");
+const nextYear = document.getElementById("nextYear");
 
 window.addEventListener("load", init);
 form.addEventListener("submit", speichern);
@@ -42,6 +49,13 @@ cancelButton.addEventListener("click", bearbeitungBeenden);
 datum.addEventListener("change", datumGeaendert);
 prevMonth.addEventListener("click", () => monatWechseln(-1));
 nextMonth.addEventListener("click", () => monatWechseln(1));
+prevYear.addEventListener("click", () => jahrWechseln(-1));
+nextYear.addEventListener("click", () => jahrWechseln(1));
+yearOverview.addEventListener("toggle", () => {
+  if (yearOverview.open) {
+    ladeJahresuebersicht();
+  }
+});
 
 urlaub.addEventListener("change", () => {
   if (urlaub.value === "Ja") krank.value = "Nein";
@@ -322,46 +336,161 @@ function renderKalender() {
 
 
 
-function renderStatistik() {
-  let buero = 0;
-  let homeoffice = 0;
-  let urlaubstage = 0;
-  let kranktage = 0;
-  let arbeitsstunden = 0;
 
-  state.eintraege.forEach((eintrag) => {
+async function ladeJahresuebersicht() {
+  const jahr = state.jahresDatum.getFullYear();
+
+  yearLabel.textContent = jahr;
+  yearSummary.textContent = `Jahresübersicht ${jahr}`;
+  yearGrid.innerHTML = "";
+
+  const monate = [
+    "Januar", "Februar", "März", "April", "Mai", "Juni",
+    "Juli", "August", "September", "Oktober", "November", "Dezember"
+  ];
+
+  const karten = monate.map((name, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "month-card";
+
+    const heute = new Date();
+    if (jahr === heute.getFullYear() && index === heute.getMonth()) {
+      button.classList.add("current-month");
+    }
+
+    button.innerHTML =
+      `<span class="month-name">${name}</span>` +
+      '<span class="month-loading">Lädt ...</span>';
+
+    button.addEventListener("click", async () => {
+      state.kalenderDatum = new Date(jahr, index, 1);
+      state.ausgewaehltesDatum = toIsoDate(state.kalenderDatum);
+      datum.value = state.ausgewaehltesDatum;
+
+      await ladeMonat();
+
+      const kalenderDetails = calendarGrid.closest("details");
+      if (kalenderDetails) {
+        kalenderDetails.open = true;
+        kalenderDetails.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+
+    yearGrid.appendChild(button);
+    return button;
+  });
+
+  await Promise.all(
+    monate.map(async (_, index) => {
+      try {
+        const data = await jsonpRequest({
+          action: "init",
+          jahr,
+          monat: index + 1
+        });
+
+        if (!data.ok) {
+          throw new Error(data.message || "Monat konnte nicht geladen werden.");
+        }
+
+        const statistik = monatswerteBerechnen(data.eintraege || []);
+        karten[index].innerHTML = monatKarteHtml(monate[index], statistik);
+      } catch (err) {
+        karten[index].innerHTML =
+          `<span class="month-name">${monate[index]}</span>` +
+          '<span class="month-empty">Keine Daten</span>';
+      }
+    })
+  );
+}
+
+function monatKarteHtml(monatName, statistik) {
+  const gesamt =
+    statistik.buero +
+    statistik.homeoffice +
+    statistik.urlaub +
+    statistik.krank;
+
+  if (gesamt === 0) {
+    return (
+      `<span class="month-name">${monatName}</span>` +
+      '<span class="month-empty">Keine Einträge</span>'
+    );
+  }
+
+  return (
+    `<span class="month-name">${monatName}</span>` +
+    '<span class="month-counts">' +
+      `<span class="month-count status-buero">Büro ${statistik.buero}</span>` +
+      `<span class="month-count status-homeoffice">HO ${statistik.homeoffice}</span>` +
+      `<span class="month-count status-urlaub">Urlaub ${statistik.urlaub}</span>` +
+      `<span class="month-count status-krank">Krank ${statistik.krank}</span>` +
+    '</span>'
+  );
+}
+
+function monatswerteBerechnen(eintraege) {
+  const werte = {
+    buero: 0,
+    homeoffice: 0,
+    urlaub: 0,
+    krank: 0,
+    arbeitsstunden: 0
+  };
+
+  eintraege.forEach((eintrag) => {
     const ort = String(eintrag.arbeitsort || "").toLowerCase();
     const stundenWert = Number(eintrag.stunden) || 0;
     const urlaubWert = Number(eintrag.urlaub) || 0;
     const krankWert = Number(eintrag.krank) || 0;
 
     if (urlaubWert > 0) {
-      urlaubstage += 1;
+      werte.urlaub += 1;
       return;
     }
 
     if (krankWert > 0) {
-      kranktage += 1;
+      werte.krank += 1;
       return;
     }
 
     if (ort.includes("home")) {
-      homeoffice += 1;
+      werte.homeoffice += 1;
     } else if (ort.includes("büro") || stundenWert > 0) {
-      buero += 1;
+      werte.buero += 1;
     }
 
-    arbeitsstunden += stundenWert;
+    werte.arbeitsstunden += stundenWert;
   });
 
-  const arbeitstage = buero + homeoffice;
-  const kugStunden = Math.max((arbeitstage * 6) - arbeitsstunden, 0);
+  return werte;
+}
 
-  statBuero.textContent = buero;
-  statHomeoffice.textContent = homeoffice;
-  statUrlaub.textContent = urlaubstage;
-  statKrank.textContent = kranktage;
-  statArbeitsstunden.textContent = stundenFormatieren(arbeitsstunden);
+async function jahrWechseln(richtung) {
+  state.jahresDatum = new Date(
+    state.jahresDatum.getFullYear() + richtung,
+    0,
+    1
+  );
+
+  await ladeJahresuebersicht();
+}
+
+function renderStatistik() {
+  const statistik = monatswerteBerechnen(state.eintraege);
+  const arbeitstage = statistik.buero + statistik.homeoffice;
+  const kugStunden = Math.max(
+    (arbeitstage * 6) - statistik.arbeitsstunden,
+    0
+  );
+
+  statBuero.textContent = statistik.buero;
+  statHomeoffice.textContent = statistik.homeoffice;
+  statUrlaub.textContent = statistik.urlaub;
+  statKrank.textContent = statistik.krank;
+  statArbeitsstunden.textContent =
+    stundenFormatieren(statistik.arbeitsstunden);
   statKug.textContent = stundenFormatieren(kugStunden);
 }
 
