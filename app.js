@@ -5,7 +5,8 @@ const state = {
   eintraege: [],
   taetigkeiten: [],
   kalenderDatum: new Date(),
-  originalDatum: null
+  originalDatum: null,
+  ausgewaehltesDatum: null
 };
 
 const form = document.getElementById("entryForm");
@@ -47,6 +48,7 @@ krank.addEventListener("change", () => {
 
 async function init() {
   setzeHeute();
+  state.ausgewaehltesDatum = datum.value;
   state.kalenderDatum = datumAusIso(datum.value);
   handleAbwesenheit();
   await ladeMonat();
@@ -158,8 +160,10 @@ async function aktionAusfuehren(action, daten) {
       zielDatum.getMonth(),
       1
     );
+    state.ausgewaehltesDatum = toIsoDate(zielDatum);
 
     bearbeitungBeenden(false);
+    datum.value = state.ausgewaehltesDatum;
     await ladeMonat();
   } catch (err) {
     zeigeMeldung("Fehler: " + err.message, "error");
@@ -181,6 +185,7 @@ function formularDaten() {
 
 function eintragLaden(eintrag) {
   state.originalDatum = eintrag.datum;
+  state.ausgewaehltesDatum = eintrag.datum;
 
   datum.value = eintrag.datum;
   arbeitsort.value = eintrag.arbeitsort || "";
@@ -215,6 +220,7 @@ function bearbeitungBeenden(setzeAufHeute = true) {
 
   if (setzeAufHeute) {
     setzeHeute();
+    state.ausgewaehltesDatum = datum.value;
   }
 
   handleAbwesenheit();
@@ -270,18 +276,25 @@ function renderKalender() {
     button.className =
       "day-cell " +
       statusKlasse(eintrag) +
-      (iso === heuteIso ? " today" : "");
+      (iso === heuteIso ? " today" : "") +
+      (iso === state.ausgewaehltesDatum ? " selected" : "");
 
     button.innerHTML =
       `<span class="day-number">${tag}</span>` +
       `<span class="status-label">${statusText(eintrag)}</span>`;
 
     button.addEventListener("click", () => {
+      state.ausgewaehltesDatum = iso;
+      datum.value = iso;
+      renderKalender();
+
       if (eintrag) {
         eintragLaden(eintrag);
       } else {
         bearbeitungBeenden(false);
         datum.value = iso;
+        state.ausgewaehltesDatum = iso;
+        renderKalender();
         zeigeMeldung("", "");
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -322,6 +335,7 @@ function statusText(eintrag) {
 async function datumGeaendert() {
   if (!datum.value) return;
 
+  state.ausgewaehltesDatum = datum.value;
   const neuesDatum = datumAusIso(datum.value);
   const monatGeaendert =
     neuesDatum.getFullYear() !== state.kalenderDatum.getFullYear() ||
@@ -347,6 +361,8 @@ async function monatWechseln(richtung) {
     1
   );
 
+  state.ausgewaehltesDatum = toIsoDate(state.kalenderDatum);
+  datum.value = state.ausgewaehltesDatum;
   await ladeMonat();
 }
 

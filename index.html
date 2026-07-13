@@ -169,8 +169,19 @@
     .day-cell.empty { visibility: hidden; }
 
     .day-cell.today {
-      outline: 2px solid #25303b;
+      box-shadow: inset 0 0 0 2px #4a90e2;
+    }
+
+    .day-cell.selected {
+      outline: 3px solid #20252b;
       outline-offset: 1px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .day-cell.today.selected {
+      box-shadow: inset 0 0 0 2px #4a90e2;
+      outline: 3px solid #20252b;
     }
 
     .day-number {
@@ -308,6 +319,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>
