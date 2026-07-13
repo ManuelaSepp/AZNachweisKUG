@@ -7,10 +7,7 @@
   <title>AZNachweisKUG</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     body {
       margin: 0;
@@ -31,18 +28,13 @@
       padding: 22px 20px;
       background: #ffffff;
       border-radius: 20px;
-      box-shadow: 0 10px 28px rgba(40, 54, 68, 0.11);
+      box-shadow: 0 10px 28px rgba(40,54,68,.11);
     }
 
     h1 {
       margin: 0 0 22px;
       text-align: center;
       font-size: 25px;
-    }
-
-    h2 {
-      margin: 0;
-      font-size: 20px;
     }
 
     label {
@@ -52,21 +44,18 @@
       font-weight: 700;
     }
 
-    input,
-    select,
-    button {
+    input, select, button {
       width: 100%;
       min-height: 52px;
       padding: 12px 14px;
       border: 1px solid #d7dde3;
       border-radius: 12px;
-      background: #ffffff;
+      background: #fff;
       color: #25303b;
       font-size: 18px;
     }
 
-    input:disabled,
-    select:disabled {
+    input:disabled, select:disabled {
       color: #929aa3;
       background: #f0f2f4;
     }
@@ -77,19 +66,46 @@
       gap: 12px;
     }
 
-    #saveButton {
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
       margin-top: 26px;
+    }
+
+    .button-row.edit-mode {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .button-row button {
+      margin: 0;
       border: 0;
-      background: #70ad47;
-      color: #ffffff;
-      font-size: 19px;
+      color: #fff;
       font-weight: 700;
       cursor: pointer;
     }
 
-    button:disabled {
-      opacity: 0.65;
-      cursor: wait;
+    #saveButton,
+    #updateButton {
+      background: #70ad47;
+    }
+
+    #deleteButton {
+      background: #c94c4c;
+    }
+
+    #cancelButton {
+      background: #7b8794;
+    }
+
+    .secondary-row {
+      display: none;
+      grid-column: 1 / -1;
+      grid-template-columns: 1fr;
+    }
+
+    .edit-mode .secondary-row {
+      display: grid;
     }
 
     #meldung {
@@ -99,18 +115,12 @@
       font-weight: 700;
     }
 
-    .success {
-      color: #337a19;
-    }
-
-    .error {
-      color: #b42318;
-    }
+    .success { color: #337a19; }
+    .error { color: #b42318; }
 
     .calendar-head {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 10px;
       margin-bottom: 14px;
     }
@@ -119,7 +129,6 @@
       width: 44px;
       min-height: 42px;
       padding: 0;
-      border-radius: 10px;
       font-size: 22px;
       font-weight: 700;
       cursor: pointer;
@@ -130,6 +139,7 @@
       text-align: center;
       font-size: 18px;
       font-weight: 700;
+      text-transform: capitalize;
     }
 
     .calendar-grid {
@@ -147,7 +157,6 @@
     }
 
     .day-cell {
-      position: relative;
       min-height: 48px;
       padding: 6px 3px;
       border: 1px solid #dce2e7;
@@ -157,12 +166,10 @@
       cursor: pointer;
     }
 
-    .day-cell.empty {
-      visibility: hidden;
-    }
+    .day-cell.empty { visibility: hidden; }
 
     .day-cell.today {
-      outline: 2px solid #70ad47;
+      outline: 2px solid #25303b;
       outline-offset: 1px;
     }
 
@@ -195,8 +202,8 @@
     }
 
     .status-urlaub {
-      background: #fff0c7;
-      color: #765800;
+      background: #dff3d2;
+      color: #35651c;
     }
 
     .status-krank {
@@ -220,22 +227,10 @@
     }
 
     @media (max-width: 420px) {
-      .app {
-        padding: 8px;
-      }
-
-      .card {
-        padding: 18px 14px;
-      }
-
-      .calendar-grid {
-        gap: 4px;
-      }
-
-      .day-cell {
-        min-height: 44px;
-        padding: 5px 2px;
-      }
+      .app { padding: 8px; }
+      .card { padding: 18px 14px; }
+      .calendar-grid { gap: 4px; }
+      .day-cell { min-height: 44px; padding: 5px 2px; }
     }
   </style>
 </head>
@@ -282,7 +277,15 @@
           </div>
         </div>
 
-        <button type="submit" id="saveButton">Speichern</button>
+        <div id="buttonRow" class="button-row">
+          <button type="submit" id="saveButton">Speichern</button>
+          <button type="button" id="updateButton" hidden>Ändern</button>
+          <button type="button" id="deleteButton" hidden>Löschen</button>
+          <div class="secondary-row">
+            <button type="button" id="cancelButton">Bearbeitung abbrechen</button>
+          </div>
+        </div>
+
         <div id="meldung" aria-live="polite"></div>
       </form>
     </section>
@@ -305,6 +308,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
