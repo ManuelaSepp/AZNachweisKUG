@@ -26,6 +26,7 @@ const monthLabel = document.getElementById("monthLabel");
 const calendarGrid = document.getElementById("calendarGrid");
 const prevMonth = document.getElementById("prevMonth");
 const nextMonth = document.getElementById("nextMonth");
+const dayTooltip = document.getElementById("dayTooltip");
 
 window.addEventListener("load", init);
 form.addEventListener("submit", speichern);
@@ -284,6 +285,7 @@ function renderKalender() {
       `<span class="status-label">${statusText(eintrag)}</span>`;
 
     button.addEventListener("click", () => {
+      tooltipAusblenden();
       state.ausgewaehltesDatum = iso;
       datum.value = iso;
       renderKalender();
@@ -300,8 +302,82 @@ function renderKalender() {
       }
     });
 
+    if (eintrag) {
+      button.addEventListener("mouseenter", () => tooltipAnzeigen(button, eintrag));
+      button.addEventListener("mouseleave", tooltipAusblenden);
+      button.addEventListener("focus", () => tooltipAnzeigen(button, eintrag));
+      button.addEventListener("blur", tooltipAusblenden);
+    }
+
     calendarGrid.appendChild(button);
   }
+}
+
+
+function tooltipAnzeigen(button, eintrag) {
+  const rect = button.getBoundingClientRect();
+  const inhalt = tooltipInhalt(eintrag);
+
+  dayTooltip.innerHTML = inhalt;
+  dayTooltip.classList.add("visible");
+
+  const tooltipBreite = 230;
+  const abstand = 8;
+
+  let links = rect.left + rect.width / 2 - tooltipBreite / 2;
+  links = Math.max(8, Math.min(links, window.innerWidth - tooltipBreite - 8));
+
+  const tooltipHoehe = dayTooltip.offsetHeight || 100;
+  let oben = rect.top - tooltipHoehe - abstand;
+
+  if (oben < 8) {
+    oben = rect.bottom + abstand;
+  }
+
+  dayTooltip.style.left = `${links}px`;
+  dayTooltip.style.top = `${oben}px`;
+  dayTooltip.style.width = `${tooltipBreite}px`;
+}
+
+function tooltipAusblenden() {
+  dayTooltip.classList.remove("visible");
+}
+
+function tooltipInhalt(eintrag) {
+  const datumText = datumAusIso(eintrag.datum).toLocaleDateString("de-DE");
+  const status = statusText(eintrag);
+  const zeilen = [`<strong>${datumText}</strong>`];
+
+  if (status) {
+    zeilen.push(`<span class="day-tooltip-line">${status}</span>`);
+  }
+
+  if (Number(eintrag.stunden) > 0) {
+    zeilen.push(
+      `<span class="day-tooltip-line">${stundenFormatieren(eintrag.stunden)} Stunden</span>`
+    );
+  } else if (Number(eintrag.urlaub) > 0 || Number(eintrag.krank) > 0) {
+    zeilen.push('<span class="day-tooltip-line">6 Stunden</span>');
+  }
+
+  if (eintrag.taetigkeit) {
+    zeilen.push(`<span class="day-tooltip-line">${htmlSicher(eintrag.taetigkeit)}</span>`);
+  }
+
+  return zeilen.join("");
+}
+
+function stundenFormatieren(wert) {
+  return Number(wert).toLocaleString("de-DE", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
+}
+
+function htmlSicher(text) {
+  const div = document.createElement("div");
+  div.textContent = String(text);
+  return div.innerHTML;
 }
 
 function statusKlasse(eintrag) {

@@ -237,6 +237,44 @@
       font-weight: 700;
     }
 
+
+    .day-cell {
+      position: relative;
+    }
+
+    .day-tooltip {
+      position: fixed;
+      z-index: 1000;
+      min-width: 190px;
+      max-width: 260px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #20252b;
+      color: #ffffff;
+      font-size: 13px;
+      line-height: 1.35;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.14s ease, transform 0.14s ease;
+    }
+
+    .day-tooltip.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .day-tooltip strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .day-tooltip-line {
+      display: block;
+    }
+
     @media (max-width: 420px) {
       .app { padding: 8px; }
       .card { padding: 18px 14px; }
@@ -319,6 +357,8 @@
     </section>
   </main>
 
-  <script src="app.js?v=4"></script>
+  <div id="dayTooltip" class="day-tooltip" role="tooltip"></div>
+
+  <script src="app.js?v=5"></script>
 </body>
 </html>
