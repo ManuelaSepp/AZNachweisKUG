@@ -276,6 +276,57 @@
     }
 
 
+
+    details.card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    details.card > summary {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-height: 64px;
+      padding: 18px 54px 18px 20px;
+      list-style: none;
+      font-size: 19px;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    details.card > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.card > summary::after {
+      content: "⌄";
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-55%) rotate(0deg);
+      font-size: 25px;
+      line-height: 1;
+      transition: transform 0.18s ease;
+    }
+
+    details.card[open] > summary::after {
+      transform: translateY(-45%) rotate(180deg);
+    }
+
+    details.card > summary:focus-visible {
+      outline: 3px solid rgba(112, 173, 71, 0.35);
+      outline-offset: -3px;
+    }
+
+    .collapsible-content {
+      padding: 0 20px 22px;
+    }
+
+    .collapsible-content .calendar-head {
+      margin-top: 2px;
+    }
+
     .stats-title {
       margin: 0 0 14px;
       font-size: 19px;
@@ -386,64 +437,70 @@
       </form>
     </section>
 
-    <section class="card">
-      <div class="calendar-head">
-        <button type="button" id="prevMonth" aria-label="Vorheriger Monat">‹</button>
-        <div id="monthLabel"></div>
-        <button type="button" id="nextMonth" aria-label="Nächster Monat">›</button>
-      </div>
+    <details class="card" open>
+      <summary>Kalender</summary>
 
-      <div id="calendarGrid" class="calendar-grid"></div>
-
-      <div class="legend">
-        <span class="status-buero">Büro</span>
-        <span class="status-homeoffice">HO</span>
-        <span class="status-urlaub">Urlaub</span>
-        <span class="status-krank">Krank</span>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2 class="stats-title">Monatsübersicht</h2>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span id="statBuero" class="stat-value">0</span>
-          <span class="stat-label">Bürotage</span>
+      <div class="collapsible-content">
+        <div class="calendar-head">
+          <button type="button" id="prevMonth" aria-label="Vorheriger Monat">‹</button>
+          <div id="monthLabel"></div>
+          <button type="button" id="nextMonth" aria-label="Nächster Monat">›</button>
         </div>
 
-        <div class="stat-card">
-          <span id="statHomeoffice" class="stat-value">0</span>
-          <span class="stat-label">Homeoffice</span>
-        </div>
+        <div id="calendarGrid" class="calendar-grid"></div>
 
-        <div class="stat-card">
-          <span id="statUrlaub" class="stat-value">0</span>
-          <span class="stat-label">Urlaubstage</span>
-        </div>
-
-        <div class="stat-card">
-          <span id="statKrank" class="stat-value">0</span>
-          <span class="stat-label">Kranktage</span>
+        <div class="legend">
+          <span class="status-buero">Büro</span>
+          <span class="status-homeoffice">HO</span>
+          <span class="status-urlaub">Urlaub</span>
+          <span class="status-krank">Krank</span>
         </div>
       </div>
+    </details>
 
-      <div class="stats-sums">
-        <div class="stat-card">
-          <span id="statArbeitsstunden" class="stat-value">0</span>
-          <span class="stat-label">Arbeitsstunden</span>
+    <details class="card" open>
+      <summary>Monatsübersicht</summary>
+
+      <div class="collapsible-content">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span id="statBuero" class="stat-value">0</span>
+            <span class="stat-label">Bürotage</span>
+          </div>
+
+          <div class="stat-card">
+            <span id="statHomeoffice" class="stat-value">0</span>
+            <span class="stat-label">Homeoffice</span>
+          </div>
+
+          <div class="stat-card">
+            <span id="statUrlaub" class="stat-value">0</span>
+            <span class="stat-label">Urlaubstage</span>
+          </div>
+
+          <div class="stat-card">
+            <span id="statKrank" class="stat-value">0</span>
+            <span class="stat-label">Kranktage</span>
+          </div>
         </div>
 
-        <div class="stat-card">
-          <span id="statKug" class="stat-value">0</span>
-          <span class="stat-label">KUG-Stunden</span>
+        <div class="stats-sums">
+          <div class="stat-card">
+            <span id="statArbeitsstunden" class="stat-value">0</span>
+            <span class="stat-label">Arbeitsstunden</span>
+          </div>
+
+          <div class="stat-card">
+            <span id="statKug" class="stat-value">0</span>
+            <span class="stat-label">KUG-Stunden</span>
+          </div>
         </div>
       </div>
-    </section>
+    </details>
   </main>
 
   <div id="dayTooltip" class="day-tooltip" role="tooltip"></div>
 
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>
