@@ -677,5 +677,14 @@
   <div id="dayTooltip" class="day-tooltip" role="tooltip"></div>
 
   <script src="app.js?v=12"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./service-worker.js").catch(function (error) {
+          console.error("Service Worker konnte nicht registriert werden:", error);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
