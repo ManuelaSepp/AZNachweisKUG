@@ -526,36 +526,18 @@
       .day-cell { min-height: 44px; padding: 5px 2px; }
     }
   </style>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#a8001f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="KuG">
 </head>
 
 <body>
   <main class="app">
-<details class="card" open>
-      <summary>Kalender</summary>
-
-      <div class="collapsible-content">
-        <div id="selectedDayStatus" class="selected-day-status">
-          <span id="selectedDayDate" class="selected-day-date"></span>
-          <span id="selectedDayMessage" class="selected-day-message"></span>
-        </div>
-
-        <div class="calendar-head">
-          <button type="button" id="prevMonth" aria-label="Vorheriger Monat">‹</button>
-          <div id="monthLabel"></div>
-          <button type="button" id="nextMonth" aria-label="Nächster Monat">›</button>
-        </div>
-
-        <div id="calendarGrid" class="calendar-grid"></div>
-
-        <div class="legend">
-          <span class="status-buero">Büro</span>
-          <span class="status-homeoffice">HO</span>
-          <span class="status-urlaub">Urlaub</span>
-          <span class="status-krank">Krank</span>
-        </div>
-      </div>
-    </details>
-
     <section class="card">
       <h1>Arbeitszeit erfassen</h1>
 
@@ -608,6 +590,32 @@
         <div id="meldung" aria-live="polite"></div>
       </form>
     </section>
+
+<details class="card" open>
+      <summary>Kalender</summary>
+
+      <div class="collapsible-content">
+        <div id="selectedDayStatus" class="selected-day-status">
+          <span id="selectedDayDate" class="selected-day-date"></span>
+          <span id="selectedDayMessage" class="selected-day-message"></span>
+        </div>
+
+        <div class="calendar-head">
+          <button type="button" id="prevMonth" aria-label="Vorheriger Monat">‹</button>
+          <div id="monthLabel"></div>
+          <button type="button" id="nextMonth" aria-label="Nächster Monat">›</button>
+        </div>
+
+        <div id="calendarGrid" class="calendar-grid"></div>
+
+        <div class="legend">
+          <span class="status-buero">Büro</span>
+          <span class="status-homeoffice">HO</span>
+          <span class="status-urlaub">Urlaub</span>
+          <span class="status-krank">Krank</span>
+        </div>
+      </div>
+    </details>
 
     <details class="card" id="yearOverview">
       <summary id="yearSummary">Jahresübersicht 2026</summary>
@@ -664,9 +672,10 @@
     </details>
   </main>
   </main>
+  </main>
 
   <div id="dayTooltip" class="day-tooltip" role="tooltip"></div>
 
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>
