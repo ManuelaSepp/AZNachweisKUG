@@ -13,7 +13,11 @@ const state = {
 const form = document.getElementById("entryForm");
 const datum = document.getElementById("datum");
 const arbeitsort = document.getElementById("arbeitsort");
-const taetigkeit = document.getElementById("taetigkeit");
+const taetigkeitenDropdown = document.getElementById("taetigkeitenDropdown");
+const taetigkeitenButton = document.getElementById("taetigkeitenButton");
+const taetigkeitenListe = document.getElementById("taetigkeitenListe");
+const freieTaetigkeitBox = document.getElementById("freieTaetigkeitBox");
+const freieTaetigkeit = document.getElementById("freieTaetigkeit");
 const stunden = document.getElementById("stunden");
 const urlaub = document.getElementById("urlaub");
 const krank = document.getElementById("krank");
@@ -50,6 +54,20 @@ updateButton.addEventListener("click", aktualisieren);
 deleteButton.addEventListener("click", loeschen);
 cancelButton.addEventListener("click", bearbeitungBeenden);
 datum.addEventListener("change", datumGeaendert);
+taetigkeitenButton.addEventListener("click", () => {
+  if (taetigkeitenButton.disabled) return;
+  const istOffen = taetigkeitenDropdown.classList.toggle("open");
+  taetigkeitenButton.setAttribute("aria-expanded", String(istOffen));
+});
+
+document.addEventListener("click", (event) => {
+  if (!taetigkeitenDropdown.contains(event.target)) {
+    taetigkeitenDropdown.classList.remove("open");
+    taetigkeitenButton.setAttribute("aria-expanded", "false");
+  }
+});
+
+freieTaetigkeit.addEventListener("input", aktualisiereTaetigkeitenButton);
 prevMonth.addEventListener("click", () => monatWechseln(-1));
 nextMonth.addEventListener("click", () => monatWechseln(1));
 prevYear.addEventListener("click", () => jahrWechseln(-1));
@@ -202,7 +220,7 @@ function formularDaten() {
   return {
     datum: datum.value,
     arbeitsort: arbeitsort.value,
-    taetigkeit: taetigkeit.value,
+    taetigkeit: ausgewaehlteTaetigkeiten().join(" | "),
     stunden: stunden.value,
     urlaub: urlaub.value,
     krank: krank.value
@@ -215,7 +233,7 @@ function eintragLaden(eintrag) {
 
   datum.value = eintrag.datum;
   arbeitsort.value = eintrag.arbeitsort || "";
-  taetigkeit.value = eintrag.taetigkeit || "";
+  setzeTaetigkeitenAusWert(eintrag.taetigkeit || "");
   stunden.value = eintrag.stunden || "";
 
   urlaub.value = Number(eintrag.urlaub) > 0 ? "Ja" : "Nein";
@@ -240,7 +258,7 @@ function bearbeitungBeenden(setzeAufHeute = true) {
   bearbeitungsmodusSetzen(false);
 
   arbeitsort.value = "";
-  taetigkeit.value = "";
+  taetigkeitenZuruecksetzen();
   stunden.value = "";
   urlaub.value = "Nein";
   krank.value = "Nein";
@@ -759,19 +777,114 @@ function jsonpRequest(parameter) {
 }
 
 function renderTaetigkeiten(liste) {
-  const bisherigerWert = taetigkeit.value;
-
-  taetigkeit.innerHTML = '<option value="">Bitte wählen</option>';
+  const bisherigerWert = ausgewaehlteTaetigkeiten().join(" | ");
+  taetigkeitenListe.innerHTML = "";
 
   liste.forEach((eintrag) => {
-    const option = document.createElement("option");
-    option.value = eintrag;
-    option.textContent = eintrag;
-    taetigkeit.appendChild(option);
+    const label = document.createElement("label");
+    label.className = "activity-option";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = eintrag;
+    checkbox.dataset.activity = "standard";
+    checkbox.addEventListener("change", aktualisiereTaetigkeitenButton);
+
+    const text = document.createElement("span");
+    text.textContent = eintrag;
+
+    label.appendChild(checkbox);
+    label.appendChild(text);
+    taetigkeitenListe.appendChild(label);
   });
 
-  if (liste.includes(bisherigerWert)) {
-    taetigkeit.value = bisherigerWert;
+  const freiLabel = document.createElement("label");
+  freiLabel.className = "activity-option";
+
+  const freiCheckbox = document.createElement("input");
+  freiCheckbox.type = "checkbox";
+  freiCheckbox.id = "freieTaetigkeitCheckbox";
+  freiCheckbox.dataset.activity = "free";
+  freiCheckbox.addEventListener("change", () => {
+    freieTaetigkeitBox.classList.toggle("hidden", !freiCheckbox.checked);
+    if (!freiCheckbox.checked) freieTaetigkeit.value = "";
+    aktualisiereTaetigkeitenButton();
+    if (freiCheckbox.checked) freieTaetigkeit.focus();
+  });
+
+  const freiText = document.createElement("span");
+  freiText.textContent = "Freitext";
+
+  freiLabel.appendChild(freiCheckbox);
+  freiLabel.appendChild(freiText);
+  taetigkeitenListe.appendChild(freiLabel);
+
+  if (bisherigerWert) setzeTaetigkeitenAusWert(bisherigerWert);
+  else aktualisiereTaetigkeitenButton();
+}
+
+function ausgewaehlteTaetigkeiten() {
+  const werte = Array.from(
+    taetigkeitenListe.querySelectorAll('input[data-activity="standard"]:checked')
+  ).map((checkbox) => checkbox.value.trim()).filter(Boolean);
+
+  const freiCheckbox = document.getElementById("freieTaetigkeitCheckbox");
+  const freierText = freieTaetigkeit.value.trim();
+
+  if (freiCheckbox && freiCheckbox.checked && freierText) {
+    werte.push(freierText);
+  }
+
+  return werte;
+}
+
+function setzeTaetigkeitenAusWert(wert) {
+  taetigkeitenZuruecksetzen();
+  const teile = String(wert || "")
+    .split(" | ")
+    .map((teil) => teil.trim())
+    .filter(Boolean);
+
+  const standardCheckboxen = Array.from(
+    taetigkeitenListe.querySelectorAll('input[data-activity="standard"]')
+  );
+  const freieTeile = [];
+
+  teile.forEach((teil) => {
+    const treffer = standardCheckboxen.find((checkbox) => checkbox.value === teil);
+    if (treffer) treffer.checked = true;
+    else freieTeile.push(teil);
+  });
+
+  if (freieTeile.length) {
+    const freiCheckbox = document.getElementById("freieTaetigkeitCheckbox");
+    if (freiCheckbox) freiCheckbox.checked = true;
+    freieTaetigkeit.value = freieTeile.join("; ");
+    freieTaetigkeitBox.classList.remove("hidden");
+  }
+
+  aktualisiereTaetigkeitenButton();
+}
+
+function taetigkeitenZuruecksetzen() {
+  taetigkeitenListe.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+    checkbox.checked = false;
+  });
+  freieTaetigkeit.value = "";
+  freieTaetigkeitBox.classList.add("hidden");
+  taetigkeitenDropdown.classList.remove("open");
+  taetigkeitenButton.setAttribute("aria-expanded", "false");
+  aktualisiereTaetigkeitenButton();
+}
+
+function aktualisiereTaetigkeitenButton() {
+  const werte = ausgewaehlteTaetigkeiten();
+  if (werte.length === 0) {
+    taetigkeitenButton.textContent = "Bitte wählen";
+  } else if (werte.length === 1) {
+    taetigkeitenButton.textContent = werte[0];
+  } else {
+    taetigkeitenButton.textContent = `${werte.length} Tätigkeiten gewählt`;
   }
 }
 
@@ -798,12 +911,13 @@ function handleAbwesenheit() {
     krank.value === "Ja";
 
   arbeitsort.disabled = istAbwesend;
-  taetigkeit.disabled = istAbwesend;
+  taetigkeitenButton.disabled = istAbwesend;
+  freieTaetigkeit.disabled = istAbwesend;
   stunden.disabled = istAbwesend;
 
   if (istAbwesend) {
     arbeitsort.value = "";
-    taetigkeit.value = "";
+    taetigkeitenZuruecksetzen();
     stunden.value = "";
   }
 }
@@ -823,7 +937,11 @@ function validiere(daten) {
     daten.krank !== "Ja"
   ) {
     if (!daten.arbeitsort) return "Bitte Arbeitsort auswählen.";
-    if (!daten.taetigkeit) return "Bitte Tätigkeit auswählen.";
+    const freiCheckbox = document.getElementById("freieTaetigkeitCheckbox");
+    if (freiCheckbox && freiCheckbox.checked && !freieTaetigkeit.value.trim()) {
+      return "Bitte den Freitext zur Tätigkeit eintragen.";
+    }
+    if (!daten.taetigkeit) return "Bitte mindestens eine Tätigkeit auswählen.";
 
     const wert = Number(daten.stunden);
 

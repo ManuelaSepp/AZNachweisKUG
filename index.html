@@ -60,6 +60,88 @@
       background: #f0f2f4;
     }
 
+    .multi-select-wrap {
+      position: relative;
+    }
+
+    .multi-select-button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .multi-select-button::after {
+      content: "▾";
+      flex: 0 0 auto;
+      font-size: 16px;
+    }
+
+    .multi-select-wrap.open .multi-select-button::after {
+      content: "▴";
+    }
+
+    .multi-select-button:disabled {
+      color: #929aa3;
+      background: #f0f2f4;
+      cursor: default;
+    }
+
+    .multi-select {
+      display: none;
+      position: absolute;
+      z-index: 50;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      max-height: 290px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid #d7dde3;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 12px 28px rgba(40,54,68,.18);
+    }
+
+    .multi-select-wrap.open .multi-select {
+      display: grid;
+      gap: 4px;
+    }
+
+    .activity-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      margin: 0;
+      padding: 8px 10px;
+      border-radius: 9px;
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    .activity-option:hover {
+      background: #f4f6f8;
+    }
+
+    .activity-option input {
+      width: 22px;
+      min-height: 22px;
+      margin: 0;
+      padding: 0;
+      flex: 0 0 auto;
+    }
+
+    .free-activity-box {
+      margin-top: 10px;
+    }
+
+    .free-activity-box.hidden {
+      display: none;
+    }
+
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -552,10 +634,15 @@
           <option value="Homeoffice">Homeoffice</option>
         </select>
 
-        <label for="taetigkeit">Tätigkeit</label>
-        <select id="taetigkeit">
-          <option value="">Bitte wählen</option>
-        </select>
+        <label>Tätigkeiten</label>
+        <div id="taetigkeitenDropdown" class="multi-select-wrap">
+          <button id="taetigkeitenButton" class="multi-select-button" type="button" aria-expanded="false">Bitte wählen</button>
+          <div id="taetigkeitenListe" class="multi-select"></div>
+        </div>
+        <div id="freieTaetigkeitBox" class="free-activity-box hidden">
+          <label for="freieTaetigkeit">Freitext</label>
+          <input id="freieTaetigkeit" type="text" placeholder="Weitere Tätigkeit eintragen">
+        </div>
 
         <label for="stunden">Stunden</label>
         <input type="number" id="stunden" step="0.25" min="0.25" max="6" inputmode="decimal">
@@ -676,7 +763,7 @@
 
   <div id="dayTooltip" class="day-tooltip" role="tooltip"></div>
 
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function () {
