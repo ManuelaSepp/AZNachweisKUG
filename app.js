@@ -539,9 +539,13 @@ async function jahrWechseln(richtung) {
 
 function renderStatistik() {
   const statistik = monatswerteBerechnen(state.eintraege);
-  const arbeitstage = statistik.buero + statistik.homeoffice;
+  const sollArbeitstage = arbeitstageImMonat();
+  const sollStunden = sollArbeitstage * 6;
+  const abwesenheitsStunden =
+    (statistik.urlaub + statistik.krank) * 6;
+
   const kugStunden = Math.max(
-    (arbeitstage * 6) - statistik.arbeitsstunden,
+    sollStunden - statistik.arbeitsstunden - abwesenheitsStunden,
     0
   );
 
@@ -552,6 +556,32 @@ function renderStatistik() {
   statArbeitsstunden.textContent =
     stundenFormatieren(statistik.arbeitsstunden);
   statKug.textContent = stundenFormatieren(kugStunden);
+}
+
+function arbeitstageImMonat() {
+  const jahr = state.kalenderDatum.getFullYear();
+  const monatIndex = state.kalenderDatum.getMonth();
+  const letzterTagImMonat = new Date(
+    jahr,
+    monatIndex + 1,
+    0
+  ).getDate();
+
+  let arbeitstage = 0;
+
+  for (let tag = 1; tag <= letzterTagImMonat; tag++) {
+    const wochentag = new Date(
+      jahr,
+      monatIndex,
+      tag
+    ).getDay();
+
+    if (wochentag >= 1 && wochentag <= 5) {
+      arbeitstage += 1;
+    }
+  }
+
+  return arbeitstage;
 }
 
 function tooltipAnzeigen(button, eintrag) {
