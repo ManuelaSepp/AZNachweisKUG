@@ -1,8 +1,8 @@
-const CACHE_NAME = "kug-app-v1";
+const CACHE_NAME = "kug-app-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./app.js?v=12",
+  "./app.js?v=14",
   "./manifest.json",
   "./favicon.png",
   "./apple-touch-icon.png",

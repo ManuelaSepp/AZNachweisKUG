@@ -731,7 +731,33 @@ async function monatWechseln(richtung) {
   await ladeMonat();
 }
 
-function jsonpRequest(parameter) {
+// Zugangsschutz: eigener Schlüssel dieser App, sonst der gemeinsame Schlüssel (von Jane, gleiche Adresse).
+// Als Funktionen deklariert, damit sie schon beim App-Start verfügbar sind.
+function zugangName() { return "aznachweiskug_zugang_v1"; }
+function zugangLesen() {
+  try { return localStorage.getItem(zugangName()) || localStorage.getItem("jane_zugang_v1") || ""; }
+  catch (_) { return ""; }
+}
+function zugangAbfragen(text) {
+  const k = window.prompt(text, "");
+  if (!k || !k.trim()) return false;
+  try { localStorage.setItem(zugangName(), k.trim()); } catch (_) {}
+  return true;
+}
+function zugangVerweigert(r) { return !!(r && r.ok === false && r.zugang === false); }
+
+async function jsonpRequest(parameter) {
+  const gesendet = zugangLesen();
+  let r = await jsonpRequestRoh({ ...parameter, zugang: gesendet });
+  if (zugangVerweigert(r) && zugangLesen() !== gesendet) r = await jsonpRequestRoh({ ...parameter, zugang: zugangLesen() });
+  if (zugangVerweigert(r) && zugangAbfragen(gesendet ? "Der gespeicherte Zugangsschlüssel passt nicht. Bitte den Schlüssel für diese App eingeben:" : "Bitte einmalig den Zugangsschlüssel eingeben:")) {
+    r = await jsonpRequestRoh({ ...parameter, zugang: zugangLesen() });
+  }
+  if (zugangVerweigert(r)) return { ok: false, zugang: false, message: "Kein Zugriff: Zugangsschlüssel fehlt oder ist falsch. Bitte Seite neu laden." };
+  return r;
+}
+
+function jsonpRequestRoh(parameter) {
   return new Promise((resolve, reject) => {
     const callbackName =
       "azCallback" +
